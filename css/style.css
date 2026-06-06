@@ -78,6 +78,7 @@ a { color: inherit; }
   padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: 14px;
 }
 .ghost-btn:hover { color: var(--text); border-color: var(--muted-2); }
+.back-btn { font-weight: 700; flex: 0 0 auto; }
 
 /* ---------- 버튼 ---------- */
 .btn {

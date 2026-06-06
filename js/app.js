@@ -72,10 +72,13 @@ window.App = (() => {
   }
 
   /* ---------------- 상단바 ---------------- */
-  function topbar() {
+  function topbar(backTo) {
     const initial = (user?.name || "?").slice(0, 1);
     return el("div", { class: "topbar" },
       el("div", { class: "wrap topbar-inner" },
+        backTo != null
+          ? el("button", { class: "ghost-btn back-btn", onclick: () => go(backTo) }, "← 뒤로가기")
+          : null,
         el("div", { class: "brand", onclick: () => go("home") },
           el("span", { class: "logo" }, "🎨"), el("span", {}, "AI 놀이터")),
         el("div", { class: "topbar-spacer" }),
@@ -117,7 +120,7 @@ window.App = (() => {
 
     root.innerHTML = "";
     root.append(
-      topbar(),
+      topbar(""),
       el("div", { class: "wrap screen" },
         notice,
         el("div", { class: "hero" },
@@ -139,10 +142,9 @@ window.App = (() => {
   function renderFeature(root, key) {
     const m = META[key];
     root.innerHTML = "";
-    root.append(topbar());
+    root.append(topbar("home"));
     const wrap = el("div", { class: "wrap" },
       el("div", { class: "page-head" },
-        el("button", { class: "ghost-btn", onclick: () => go("home"), style: "margin-right:4px" }, "←"),
         el("div", { class: "pico", style: "background:" + m.soft }, m.icon),
         el("div", {}, el("h2", {}, m.title), el("p", {}, m.sub)),
       ),
