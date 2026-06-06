@@ -36,21 +36,26 @@ window.App = (() => {
 
   /* ---------------- 입장 화면 ---------------- */
   function renderEntry(root) {
-    const school = el("input", { class: "input", placeholder: "예: 행복초등학교", value: user?.school || "" });
     const name = el("input", { class: "input", placeholder: "예: 홍길동", value: user?.name || "" });
-    name.addEventListener("keydown", e => { if (e.key === "Enter") enter(); });
+    const phone = el("input", { class: "input", type: "tel", inputmode: "numeric", placeholder: "예: 010-1234-5678", value: user?.phone || "" });
+    phone.addEventListener("keydown", e => { if (e.key === "Enter") enter(); });
 
     const card = el("div", { class: "entry-card" },
       el("div", { class: "entry-logo" }, "🎨"),
       el("h1", {}, "AI 놀이터"),
       el("p", { class: "sub" }, "로그인 없이 누구나 즐기는 AI 체험"),
-      el("div", { class: "field" }, el("label", {}, "학교"), school),
       el("div", { class: "field" }, el("label", {}, "이름"), name),
+      el("div", { class: "field" }, el("label", {}, "휴대폰번호"), phone),
       el("button", { class: "btn lg block", onclick: enter }, "입장하기 →"),
       el("div", { class: "badges" },
         el("span", { class: "badge" }, "🪄 동화제작"),
         el("span", { class: "badge" }, "🧭 진로탐험"),
         el("span", { class: "badge" }, "💻 바이브코딩"),
+      ),
+      el("div", { style: "margin-top:18px" },
+        el("a", { href: "./privacy.html", target: "_blank", rel: "noopener",
+          style: "font-size:12px;color:var(--muted-2);text-decoration:underline" },
+          "개인정보 처리방침"),
       ),
     );
     root.innerHTML = "";
@@ -59,7 +64,9 @@ window.App = (() => {
 
     function enter() {
       if (!name.value.trim()) return toast("이름을 입력해 주세요!");
-      saveUser({ school: school.value.trim(), name: name.value.trim() });
+      const digits = phone.value.replace(/[^0-9]/g, "");
+      if (digits.length < 10) return toast("휴대폰번호를 정확히 입력해 주세요!");
+      saveUser({ name: name.value.trim(), phone: phone.value.trim() });
       go("home");
     }
   }
@@ -73,8 +80,7 @@ window.App = (() => {
           el("span", { class: "logo" }, "🎨"), el("span", {}, "AI 놀이터")),
         el("div", { class: "topbar-spacer" }),
         el("div", { class: "userchip" }, el("span", { class: "avatar" }, initial),
-          el("span", {}, (user?.name || "친구")),
-          user?.school ? el("span", { style: "color:var(--muted);font-weight:500" }, "· " + user.school) : null),
+          el("span", {}, (user?.name || "친구"))),
         el("button", { class: "ghost-btn", onclick: logout }, "나가기"),
       ),
     );
