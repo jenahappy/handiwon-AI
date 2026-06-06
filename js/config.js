@@ -16,8 +16,8 @@ window.CONFIG = {
   IMAGE_MODEL: "flux",
   // 앱을 식별해 사용량 제한을 완화 (Pollinations 권장 방식). 사이트 도메인으로.
   IMAGE_REFERRER: "jenahappy.github.io",
-  // (선택) 무료 토큰을 넣으면 삽화가 훨씬 안정적으로 생성됩니다.
-  // 발급: https://auth.pollinations.ai (GitHub 로그인, 무료). 없으면 "" 로 두세요.
+  // (고급/선택) 토큰을 넣으면 사용량 제한이 완화됩니다. 보통은 비워둬도 동작해요.
+  // 토큰 콘솔: https://enter.pollinations.ai  (없으면 "" 로 두세요)
   IMAGE_TOKEN: "",
 
   // 개발/임시용: PROXY_URL이 비어있을 때 브라우저에 직접 키를 넣어 테스트.
