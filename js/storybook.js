@@ -20,21 +20,24 @@ window.Screens.story = (() => {
   const LOADING_IMG = svgPlaceholder("🎨", "그림을 그리고 있어요", "잠시만 기다려 주세요…", "#fff0f4");
   const ERROR_IMG = svgPlaceholder("🖼️", "그림을 불러오지 못했어요", "여기를 눌러 다시 시도", "#f3f4f7");
 
-  // 삽화 1장 로딩: 실패하면 자동 재시도(시드 변경) 후, 끝내 실패 시 눌러서 재시도
-  function loadImage(imgEl, promptText, seedBase, attempt) {
+  // 이전 blob URL 정리(메모리 누수 방지)
+  function revokePrev(imgEl) {
+    if (imgEl._objUrl) { try { URL.revokeObjectURL(imgEl._objUrl); } catch {} imgEl._objUrl = null; }
+  }
+
+  // 삽화 1장 로딩: 인증 사용자→Gemini, 그 외→Pollinations.
+  // 실패하면 자동 재시도(시드 변경) 후, 끝내 실패 시 눌러서 재시도.
+  async function loadImage(imgEl, promptText, seedBase, attempt) {
     attempt = attempt || 0;
     imgEl.onclick = null;
     imgEl.style.cursor = "default";
+    revokePrev(imgEl);
     imgEl.src = LOADING_IMG;
-    const url = AI.imageUrl(promptText, { seed: seedBase + attempt * 1000 });
-    const pre = new Image();
+
     let done = false;
-    const finish = (ok) => {
+    const fail = () => {
       if (done) return; done = true;
-      if (ok) {
-        imgEl.src = url;
-      } else if (attempt < 3) {
-        // Pollinations 익명 제한(15초/IP) 대응: 시간을 두고 재시도
+      if (attempt < 3) {
         setTimeout(() => loadImage(imgEl, promptText, seedBase, attempt + 1), 6000 + attempt * 5000);
       } else {
         imgEl.src = ERROR_IMG;
@@ -43,10 +46,23 @@ window.Screens.story = (() => {
         imgEl.onclick = () => loadImage(imgEl, promptText, seedBase, 0);
       }
     };
-    pre.onload = () => finish(true);
-    pre.onerror = () => finish(false);
-    setTimeout(() => { if (!done && !pre.complete) finish(false); }, 35000); // 타임아웃
-    pre.src = url;
+
+    let src;
+    try {
+      src = await AI.resolveImageSrc(promptText, { seed: seedBase + attempt * 1000 });
+    } catch (e) {
+      return fail();
+    }
+
+    const pre = new Image();
+    pre.onload = () => {
+      if (done) return; done = true;
+      if (src.startsWith("blob:")) imgEl._objUrl = src;
+      imgEl.src = src;
+    };
+    pre.onerror = () => fail();
+    setTimeout(() => { if (!done && !pre.complete) fail(); }, 35000); // 타임아웃
+    pre.src = src;
   }
 
   function render(root) {
