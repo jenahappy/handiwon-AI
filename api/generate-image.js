@@ -39,18 +39,6 @@ export default async function handler(req, res) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: "서버에 GEMINI_API_KEY가 설정되지 않았습니다." });
 
-  // 진단용: 이 키로 사용 가능한 모델 목록 반환 (임시)
-  if (body.debug === "models") {
-    try {
-      const lr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=200`);
-      const ld = await lr.json();
-      const models = (ld.models || []).map(m => ({ name: m.name, methods: m.supportedGenerationMethods }));
-      return res.status(200).json({ models });
-    } catch (e) {
-      return res.status(502).json({ error: "목록 조회 실패: " + e.message });
-    }
-  }
-
   // 모델명: 환경변수 우선, 없으면 가용 모델(generateContent 지원)을 차례로 시도
   const models = process.env.GEMINI_IMAGE_MODEL
     ? [process.env.GEMINI_IMAGE_MODEL]
