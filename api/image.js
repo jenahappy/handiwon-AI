@@ -14,7 +14,7 @@ export const config = { maxDuration: 60 };
 
 const MODELS = process.env.HF_IMAGE_MODEL
   ? [process.env.HF_IMAGE_MODEL]
-  : ["black-forest-labs/FLUX.1-schnell", "stabilityai/stable-diffusion-xl-base-1.0"];
+  : ["black-forest-labs/FLUX.1-dev", "black-forest-labs/FLUX.1-schnell", "stabilityai/stable-diffusion-xl-base-1.0"];
 
 function pollinationsUrl(prompt, q) {
   const w = q.width || "768", h = q.height || "768";
