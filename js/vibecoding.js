@@ -74,33 +74,43 @@ window.Screens.code = (() => {
     }
 
     function showResult(lastText) {
-      const frame = el("iframe", { class: "preview-frame", sandbox: "allow-scripts allow-modals", title: "미리보기" });
+      const frame = el("iframe", { class: "preview-frame", sandbox: "allow-scripts allow-modals", title: "실행 화면" });
       const codebox = el("pre", { class: "codebox" }, currentHtml);
+
+      // 코드 영역: 기본 숨김, 버튼으로 펼치기/접기
+      const codeSection = el("div", { style: "display:none; margin-top:14px" },
+        el("div", { style: "font-weight:700;margin-bottom:8px;font-size:14px" }, "📄 코드"),
+        codebox,
+      );
+      const toggleBtn = el("button", { class: "btn secondary", onclick: () => {
+        const hidden = codeSection.style.display === "none";
+        codeSection.style.display = hidden ? "block" : "none";
+        toggleBtn.textContent = hidden ? "🙈 코드 숨기기" : "🔎 코드 보기";
+      } }, "🔎 코드 보기");
 
       const refineInput = el("input", { class: "input", placeholder: "고치고 싶은 점을 적어보세요 (예: 배경을 분홍색으로)" });
       refineInput.addEventListener("keydown", e => { if (e.key === "Enter") generate(refineInput.value, true); });
 
       const layout = el("div", { class: "screen" },
-        el("div", { class: "code-layout" },
-          el("div", { class: "preview-wrap" },
-            el("div", { class: "preview-bar" },
-              el("span", { class: "dot", style: "background:#ff5f57" }),
-              el("span", { class: "dot", style: "background:#febc2e" }),
-              el("span", { class: "dot", style: "background:#28c840" }),
-              el("span", { class: "tt" }, "미리보기"),
-            ),
-            frame,
+        // 실행 화면(메인) — 전체 너비로 크게
+        el("div", { class: "preview-wrap big" },
+          el("div", { class: "preview-bar" },
+            el("span", { class: "dot", style: "background:#ff5f57" }),
+            el("span", { class: "dot", style: "background:#febc2e" }),
+            el("span", { class: "dot", style: "background:#28c840" }),
+            el("span", { class: "tt" }, "실행 화면"),
           ),
-          el("div", { class: "code-side" },
-            el("div", { style: "font-weight:700;margin-bottom:8px;font-size:14px" }, "📄 코드"),
-            codebox,
-            el("div", { class: "code-actions" },
-              el("button", { class: "btn code", onclick: () => downloadHtml(currentHtml) }, "💾 HTML 저장"),
-              el("button", { class: "btn secondary", onclick: () => { navigator.clipboard.writeText(currentHtml); toast("코드를 복사했어요!"); } }, "📋 복사"),
-              el("button", { class: "ghost-btn", onclick: () => render(root) }, "🔄 새로 만들기"),
-            ),
-          ),
+          frame,
         ),
+        // 버튼 모음
+        el("div", { class: "code-actions", style: "margin-top:14px" },
+          toggleBtn,
+          el("button", { class: "btn code", onclick: () => downloadHtml(currentHtml) }, "💾 저장하기"),
+          el("button", { class: "btn secondary", onclick: () => { navigator.clipboard.writeText(currentHtml); toast("코드를 복사했어요!"); } }, "📋 복사하기"),
+          el("button", { class: "ghost-btn", onclick: () => render(root) }, "🔄 새로 만들기"),
+        ),
+        codeSection,
+        // 더 고치기
         el("div", { class: "panel card", style: "margin-top:18px" },
           el("h4", {}, "✏️ 더 고쳐볼까요?"),
           el("div", { class: "chat-input" },

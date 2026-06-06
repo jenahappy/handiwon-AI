@@ -227,6 +227,7 @@ a { color: inherit; }
    ========================================================= */
 .code-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch; }
 .preview-wrap { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: #fff; min-height: 460px; display: flex; flex-direction: column; }
+.preview-wrap.big { min-height: 72vh; box-shadow: var(--shadow); }
 .preview-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
 .preview-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
 .preview-bar .tt { margin-left: 8px; font-size: 13px; color: var(--muted); }
