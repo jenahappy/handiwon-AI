@@ -79,18 +79,8 @@ export default async function handler(req, res) {
     errors.push({ detail: "HF_TOKEN 미설정" });
   }
 
-  // 진단용 (값은 노출 안 하고 존재 여부만)
-  if (q.debug) return res.status(200).json({
-    source: "none",
-    env: {
-      HF_TOKEN: !!process.env.HF_TOKEN,
-      HF_TOKEN_len: (process.env.HF_TOKEN || "").length,
-      GROQ_API_KEY: !!process.env.GROQ_API_KEY,
-      GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
-      HF_IMAGE_MODEL: process.env.HF_IMAGE_MODEL || null,
-    },
-    errors,
-  });
+  // 진단용 (HF 실패 시 원인 확인)
+  if (q.debug) return res.status(200).json({ hfToken: !!process.env.HF_TOKEN, errors });
 
   // 2순위: Pollinations 로 리다이렉트 (브라우저가 자기 IP로 받음)
   res.setHeader("Cache-Control", "no-store");
