@@ -201,6 +201,18 @@ a { color: inherit; }
 .page-dot.active { background: var(--story); width: 24px; border-radius: 999px; }
 .book-title { text-align: center; font-size: 24px; font-weight: 800; margin: 0 0 16px; letter-spacing: -.02em; }
 
+/* A4 비율 동화 페이지(화면 표시 + PDF 캡처 공용) */
+.book-all { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.pdf-page {
+  width: min(680px, 100%); aspect-ratio: 210 / 297; background: #fff;
+  border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 6.5% 7% 6%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden;
+}
+.pdf-page .pp-head { font-size: 13px; color: var(--muted-2); font-weight: 700; margin-bottom: 8px; }
+.pdf-page .pp-num { font-size: 15px; color: var(--story); font-weight: 800; margin-bottom: 12px; }
+.pdf-page .pp-img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; background: var(--surface-2); }
+.pdf-page .pp-text { margin-top: 16px; font-size: 17px; line-height: 1.75; color: var(--text); flex: 1; overflow: hidden; }
+
 /* =========================================================
    채팅 (진로탐험 + 도우미 챗봇 공용)
    ========================================================= */
