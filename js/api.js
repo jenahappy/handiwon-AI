@@ -91,42 +91,25 @@ window.AI = (() => {
     return `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}?${params.toString()}`;
   }
 
-  // 인증 사용자(jena / 01012341234) 판별
-  function isGeminiUser() {
-    const u = window.App && window.App.user && window.App.user();
-    if (!u) return false;
-    const name = String(u.name || "").trim().toLowerCase();
-    const phone = String(u.phone || "").replace(/[^0-9]/g, "");
-    return name === "jena" && phone === "01012341234";
+  // Vercel /api/image 프록시 URL (HF 무료 이미지 → 실패 시 Pollinations 자동 대체)
+  function imageProxyUrl(prompt, opts = {}) {
+    const full = decoratePrompt(prompt);
+    const w = opts.width || 768, h = opts.height || 768;
+    const seed = opts.seed != null ? opts.seed : Math.floor(Math.random() * 1e6);
+    const base = C.PROXY_URL.replace(/\/$/, "") + "/image";
+    const p = new URLSearchParams({ prompt: full, width: String(w), height: String(h), seed: String(seed) });
+    return base + "?" + p.toString();
   }
 
-  // Vercel /api/generate-image 호출 → Gemini 이미지(blob URL) 반환
-  async function geminiImage(prompt) {
-    if (!C.PROXY_URL) throw new Error("PROXY_URL 미설정");
-    const u = (window.App && window.App.user && window.App.user()) || {};
-    const endpoint = C.PROXY_URL.replace(/\/$/, "") + "/generate-image";
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: decoratePrompt(prompt), name: u.name, phone: u.phone }),
-    });
-    if (!res.ok) throw new Error("Gemini 이미지 오류 " + res.status);
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  }
-
-  // 사용자에 따라 이미지 소스를 결정해 반환(Promise<string>)
-  //  - 인증 사용자: Gemini(blob URL). 실패하면 Pollinations로 자동 대체.
-  //  - 그 외: Pollinations URL.
+  // 이미지 소스 결정(Promise<string>)
+  //  - 프록시 설정 시: /api/image (HF 무료 → 실패 시 Pollinations)
+  //  - 프록시 없을 때: Pollinations 직접
   async function resolveImageSrc(prompt, opts = {}) {
-    if (isGeminiUser()) {
-      try { return await geminiImage(prompt); }
-      catch (e) { console.warn("Gemini 실패 → Pollinations로 대체:", e.message); }
-    }
+    if (C.PROXY_URL) return imageProxyUrl(prompt, opts);
     return imageUrl(prompt, opts);
   }
 
   function isConfigured() { return !!(C.PROXY_URL || C.DEV_GROQ_KEY); }
 
-  return { chat, chatJSON, imageUrl, resolveImageSrc, isGeminiUser, isConfigured };
+  return { chat, chatJSON, imageUrl, resolveImageSrc, isConfigured };
 })();
