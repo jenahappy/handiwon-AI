@@ -51,17 +51,17 @@ export default async function handler(req, res) {
     }
   }
 
-  // 모델명: 환경변수 우선, 없으면 후보들을 차례로 시도
+  // 모델명: 환경변수 우선, 없으면 가용 모델(generateContent 지원)을 차례로 시도
   const models = process.env.GEMINI_IMAGE_MODEL
     ? [process.env.GEMINI_IMAGE_MODEL]
-    : ["gemini-2.5-flash-image", "gemini-2.5-flash-image-preview", "gemini-2.0-flash-preview-image-generation"];
+    : ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3-pro-image"];
 
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+    generationConfig: { responseModalities: ["IMAGE"] },
   };
 
-  let lastErr = null;
+  const errors = [];
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     try {
@@ -71,21 +71,21 @@ export default async function handler(req, res) {
         body: JSON.stringify(payload),
       });
       const data = await r.json();
-      if (!r.ok) { lastErr = { status: r.status, model, detail: data?.error?.message || data }; continue; }
+      if (!r.ok) { errors.push({ model, status: r.status, detail: data?.error?.message || data }); continue; }
 
       const parts = data?.candidates?.[0]?.content?.parts || [];
       const part = parts.find(p => p.inlineData || p.inline_data);
       const inline = part?.inlineData || part?.inline_data;
-      if (!inline?.data) { lastErr = { status: 502, model, detail: "이미지 데이터 없음" }; continue; }
+      if (!inline?.data) { errors.push({ model, status: 502, detail: "이미지 데이터 없음" }); continue; }
 
       const buf = Buffer.from(inline.data, "base64");
       res.setHeader("Content-Type", inline.mimeType || inline.mime_type || "image/png");
       res.setHeader("Cache-Control", "public, max-age=86400");
       return res.status(200).send(buf);
     } catch (e) {
-      lastErr = { status: 502, model, detail: e.message };
+      errors.push({ model, status: 502, detail: e.message });
     }
   }
 
-  return res.status(lastErr?.status || 502).json({ error: "Gemini 이미지 생성 실패", ...lastErr });
+  return res.status(errors[0]?.status || 502).json({ error: "Gemini 이미지 생성 실패", errors });
 }
