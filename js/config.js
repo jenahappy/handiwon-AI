@@ -5,9 +5,9 @@
    바꾸면 됩니다. (예: https://ai-playground.본인계정.workers.dev)
    =========================================================== */
 window.CONFIG = {
-  // Cloudflare Worker 프록시 주소 (Groq 키는 Worker 안에 숨겨져 있음)
-  // ↓↓↓ 배포 후 이 주소를 본인 Worker 주소로 바꾸세요 ↓↓↓
-  PROXY_URL: "",
+  // 프록시 주소 (Groq 키는 프록시 뒤에 숨겨져 있음)
+  // Vercel 서버리스 함수 사용: 도메인 + "/api"  (→ /api/chat 호출)
+  PROXY_URL: "https://handiwon-ai.vercel.app/api",
 
   // Groq 모델 (Worker 쪽과 맞추기)
   MODEL: "llama-3.3-70b-versatile",
