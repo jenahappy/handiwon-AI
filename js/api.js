@@ -74,12 +74,17 @@ window.AI = (() => {
     throw new Error("AI 응답을 이해하지 못했어요. 다시 시도해 주세요.");
   }
 
-  // Pollinations 무료 이미지 URL 생성
+  // Pollinations 이미지 URL 생성 (referrer/token으로 사용량 제한 완화)
   function imageUrl(prompt, opts = {}) {
-    const p = encodeURIComponent(prompt + ", children's storybook illustration, soft colors, cute, warm, high quality");
+    const full = prompt + ", children's storybook illustration, soft colors, cute, warm, high quality, no text, no letters";
     const w = opts.width || 768, h = opts.height || 768;
     const seed = opts.seed != null ? opts.seed : Math.floor(Math.random() * 1e6);
-    return `https://image.pollinations.ai/prompt/${p}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=${C.IMAGE_MODEL}`;
+    const params = new URLSearchParams({
+      width: String(w), height: String(h), seed: String(seed), nologo: "true", model: C.IMAGE_MODEL,
+    });
+    if (C.IMAGE_REFERRER) params.set("referrer", C.IMAGE_REFERRER);
+    if (C.IMAGE_TOKEN) params.set("token", C.IMAGE_TOKEN);
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}?${params.toString()}`;
   }
 
   function isConfigured() { return !!(C.PROXY_URL || C.DEV_GROQ_KEY); }

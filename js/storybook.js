@@ -8,6 +8,47 @@ window.Screens.story = (() => {
   const THEMES = ["우주 모험", "마법 숲", "바닷속 친구들", "공룡 시대", "용감한 기사", "하늘을 나는 꿈", "로봇 친구", "작은 영웅"];
   const MOODS = ["따뜻하고 감동적인", "신나고 모험 가득한", "웃기고 유쾌한", "잔잔하고 포근한"];
 
+  // 그림 자리표시 이미지(SVG) — 로딩/실패 안내
+  function svgPlaceholder(emoji, line1, line2, bg) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='768' height='768'>` +
+      `<rect width='100%' height='100%' fill='${bg}'/>` +
+      `<text x='50%' y='42%' font-size='110' text-anchor='middle'>${emoji}</text>` +
+      `<text x='50%' y='56%' font-size='34' fill='#7a7f88' text-anchor='middle' font-family='sans-serif'>${line1}</text>` +
+      `<text x='50%' y='63%' font-size='24' fill='#aab' text-anchor='middle' font-family='sans-serif'>${line2}</text></svg>`;
+    return "data:image/svg+xml," + encodeURIComponent(svg);
+  }
+  const LOADING_IMG = svgPlaceholder("🎨", "그림을 그리고 있어요", "잠시만 기다려 주세요…", "#fff0f4");
+  const ERROR_IMG = svgPlaceholder("🖼️", "그림을 불러오지 못했어요", "여기를 눌러 다시 시도", "#f3f4f7");
+
+  // 삽화 1장 로딩: 실패하면 자동 재시도(시드 변경) 후, 끝내 실패 시 눌러서 재시도
+  function loadImage(imgEl, promptText, seedBase, attempt) {
+    attempt = attempt || 0;
+    imgEl.onclick = null;
+    imgEl.style.cursor = "default";
+    imgEl.src = LOADING_IMG;
+    const url = AI.imageUrl(promptText, { seed: seedBase + attempt * 1000 });
+    const pre = new Image();
+    let done = false;
+    const finish = (ok) => {
+      if (done) return; done = true;
+      if (ok) {
+        imgEl.src = url;
+      } else if (attempt < 3) {
+        // Pollinations 익명 제한(15초/IP) 대응: 시간을 두고 재시도
+        setTimeout(() => loadImage(imgEl, promptText, seedBase, attempt + 1), 6000 + attempt * 5000);
+      } else {
+        imgEl.src = ERROR_IMG;
+        imgEl.style.cursor = "pointer";
+        imgEl.title = "눌러서 다시 시도";
+        imgEl.onclick = () => loadImage(imgEl, promptText, seedBase, 0);
+      }
+    };
+    pre.onload = () => finish(true);
+    pre.onerror = () => finish(false);
+    setTimeout(() => { if (!done && !pre.complete) finish(false); }, 35000); // 타임아웃
+    pre.src = url;
+  }
+
   function render(root) {
     const state = { name: "", theme: "", mood: MOODS[0], pages: 5 };
 
@@ -45,7 +86,7 @@ window.Screens.story = (() => {
 
       try {
         const n = state.pages;
-        const sys = "너는 한국 어린이를 위한 따뜻한 동화작가야. 쉽고 다정한 우리말로 쓴다.";
+        const sys = "너는 한국 어린이를 위한 따뜻한 동화작가야. 쉽고 다정한 우리말로 쓴다. 'text' 필드는 어떤 경우에도 반드시 한국어로만 작성하고, 'image' 필드만 영어로 작성한다.";
         const usr =
 `다음 조건으로 ${n}장짜리 그림동화를 만들어줘.
 - 주인공: ${state.name}
@@ -104,14 +145,7 @@ pages 배열은 정확히 ${n}개.`;
         if (i < 0 || i >= data.pages.length) return;
         idx = i;
         const pg = data.pages[idx];
-        // 이미지 로딩 표시
-        imgEl.classList.add("loading-img");
-        imgEl.removeAttribute("src");
-        const url = AI.imageUrl(`${pg.image}, ${style}`, { seed: seed + idx });
-        const pre = new Image();
-        pre.onload = () => { imgEl.src = url; imgEl.classList.remove("loading-img"); };
-        pre.onerror = () => { imgEl.classList.remove("loading-img"); };
-        pre.src = url;
+        loadImage(imgEl, `${pg.image}, ${style}`, seed + idx * 100);
 
         textEl.innerHTML = `<span style="color:var(--story);font-weight:800">${idx + 1}장</span><br>` + esc(pg.text);
         [...dotsEl.children].forEach((d, k) => d.classList.toggle("active", k === idx));
